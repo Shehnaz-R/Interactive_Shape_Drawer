@@ -13,7 +13,7 @@ Users can select a shape from a **dropdown menu**, and it will start animating i
 - 📂 **Dropdown menu** for shape selection  
 - 🏷️ Shape name displayed under the drawing  
 - 📱 **Responsive canvas** (adjusts to screen size)  
-- 🧩 Easy to extend: add your own shapes!  
+- 🧩 Easy to extend: add your own shapes!.  
 
 ---
 
