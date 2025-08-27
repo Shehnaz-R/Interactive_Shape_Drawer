@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shape Drawer</title>
+  <style>
+    body {
+      margin: 0;
+      background: #120010;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #controls {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+    #shapeName {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <select id="shapeSelect"></select>
+  </div>
+
+  <canvas id="Canvas"></canvas>
+  <div id="shapeName">Butterfly</div>
+
+  <script>
+  const { PI: π, E: e, sin, cos, pow, exp, abs } = Math;
+  let c = document.getElementById("Canvas");
+  let ctx = c.getContext("2d");
+  let W, H;
+
+  const setSize = () => {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    W = c.width;
+    H = c.height;
+  };
+  window.onresize = setSize;
+  setSize();
+
+  let θ = 0, fc = 0, x = 0, y = 0, tempx = 0, tempy = 0;
+  let currentShape = "butterfly";
+
+  // 📦 Dictionary of 20 shapes
+  const shapes = {
+    butterfly: (θ) => {
+      let r = exp(sin(θ)) - 2 * cos(4 * θ) + pow(sin((2 * θ - π) / 24), 5);
+      r *= 90;
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    circle: (θ) => ({ x: 150 * cos(θ), y: 150 * sin(θ) }),
+    heart: (θ) => {
+      const r = 10;
+      return {
+        x: 16 * pow(sin(θ), 3) * r,
+        y: -(13 * cos(θ) - 5 * cos(2*θ) - 2 * cos(3*θ) - cos(4*θ)) * r
+      };
+    },
+    spiral: (θ) => ({ x: θ * 4 * cos(θ), y: θ * 4 * sin(θ) }),
+    lissajous: (θ) => ({ x: 200 * sin(3*θ + π/2), y: 150 * sin(2*θ) }),
+    rose: (θ) => {
+      const k = 5;
+      const r = 200 * cos(k * θ);
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    lemniscate: (θ) => {
+      const a = 200;
+      const r = a * cos(2*θ);
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    cardioid: (θ) => {
+      const a = 150;
+      const r = a * (1 - cos(θ));
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    star: (θ) => {
+      const R = 200, r = 80;
+      return { x: (R + r) * cos(θ) - r * cos((R/r + 1) * θ),
+               y: (R + r) * sin(θ) - r * sin((R/r + 1) * θ) };
+    },
+    ellipse: (θ) => ({ x: 200 * cos(θ), y: 120 * sin(θ) }),
+
+    // 🔥 New shapes
+    hypotrochoid: (θ) => {  // spirograph-like
+      const R = 200, r = 60, d = 100;
+      return {
+        x: (R-r) * cos(θ) + d * cos(((R-r)/r) * θ),
+        y: (R-r) * sin(θ) - d * sin(((R-r)/r) * θ)
+      };
+    },
+    epitrochoid: (θ) => {
+      const R = 100, r = 30, d = 80;
+      return {
+        x: (R+r) * cos(θ) - d * cos(((R+r)/r) * θ),
+        y: (R+r) * sin(θ) - d * sin(((R+r)/r) * θ)
+      };
+    },
+    astroid: (θ) => {
+      const a = 200;
+      return { x: a * pow(cos(θ), 3), y: a * pow(sin(θ), 3) };
+    },
+    nephroid: (θ) => {
+      const a = 100;
+      return { x: a * (3*cos(θ) - cos(3*θ)), y: a * (3*sin(θ) - sin(3*θ)) };
+    },
+    folium: (θ) => {
+      const a = 200;
+      const denom = 1 + pow(sin(θ), 3);
+      const r = a * cos(θ) * sin(θ) / denom;
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    clover: (θ) => {
+      const r = 200 * sin(2*θ);
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    eightCurve: (θ) => {
+      const a = 150;
+      return { x: a * sin(θ), y: a * sin(θ) * cos(θ) };
+    },
+    deltoid: (θ) => {
+      const a = 100;
+      return {
+        x: 2*a*cos(θ) + a*cos(2*θ),
+        y: 2*a*sin(θ) - a*sin(2*θ)
+      };
+    },
+    teardrop: (θ) => {
+      const r = 150 * (1 - cos(θ));
+      return { x: r * cos(θ), y: r * sin(θ) };
+    },
+    polygon: (θ) => { // approximates polygonal edges
+      const sides = 6;
+      const r = 200;
+      return { x: r * cos(Math.round(θ/(2*π/sides)) * 2*π/sides),
+               y: r * sin(Math.round(θ/(2*π/sides)) * 2*π/sides) };
+    }
+  };
+
+  // Populate dropdown automatically
+  const select = document.getElementById("shapeSelect");
+  Object.keys(shapes).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.text = name.charAt(0).toUpperCase() + name.slice(1);
+    select.appendChild(opt);
+  });
+  select.value = "butterfly";
+
+  // Dropdown event
+  select.onchange = (e) => {
+    currentShape = e.target.value;
+    document.getElementById("shapeName").innerText = e.target.options[e.target.selectedIndex].text;
+    ctx.clearRect(0, 0, W, H);
+    θ = 0; fc = 0; x = 0; y = 0;
+  };
+
+  function animate() {
+    ctx.save();
+    ctx.translate(W/2, H/2);
+    ctx.strokeStyle = `hsl(${fc % 360}, 100%, 70%)`;
+
+    tempx = x; tempy = y;
+    const p = shapes[currentShape](θ);
+    x = p.x;
+    y = p.y;
+
+    if(fc > 0){
+      ctx.beginPath();
+      ctx.moveTo(tempx, tempy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    θ += 0.02;
+    fc++;
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+  </script>
+</body>
+</html>
