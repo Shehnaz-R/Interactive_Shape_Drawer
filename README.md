@@ -5,7 +5,7 @@ Users can select a shape from a **dropdown menu**, and it will start animating i
 
 ---
 ## Check out the live version:
-[View Live on vercel web](https://to-do-list2-three.vercel.app/)
+[View Live on vercel web](https://interactive-shape-drawer-65ca.vercel.app/)
 
 ## ✨ Features
 - 🖌️ **20+ unique shapes** (Butterfly, Heart, Spiral, Cardioid, Rose, Lissajous, Hypotrochoid, etc.)  
